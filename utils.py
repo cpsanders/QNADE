@@ -36,7 +36,6 @@ def generate_possible_states(n):
 
     return torch.tensor(possible_states, dtype=torch.float)
 
-
 def calculate_epsilons(model, s, psi_omega, B, J):
         """
         Calculates the E_loc(s) for all sampled states.
@@ -52,13 +51,14 @@ def calculate_epsilons(model, s, psi_omega, B, J):
         Returns: 
             epsilon: double, epsilon contribution for the given state 
         """
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         N = len(s[0])
         
-        z_term = torch.zeros([len(s)])
+        z_term = torch.zeros([len(s)]).to(device)
 
         # sum of the wavefunction coefficients resulting from sigma_x acting on each qubit (per sample)
-        psi_s_prime_sum = torch.zeros([len(s)])
+        psi_s_prime_sum = torch.zeros([len(s)]).to(device)
 
         for i in range(N):
             
@@ -75,6 +75,51 @@ def calculate_epsilons(model, s, psi_omega, B, J):
         
         x_term = psi_s_prime_sum/psi_omega
 
-        epsilons = J*z_term + B*x_term
+        epsilons = -(J*z_term + B*x_term)
         
         return epsilons
+
+def TFIM_exact(n, g):
+
+  J = 1
+  B = g
+
+  #Initialize operators and Identity matrix
+  s_z = np.array([[1,0],[0,-1]])
+  s_x = np.array([[0,1],[1,0]])
+  I = np.array([[1,0],[0,1]])
+
+  #Calculate and print energies for n qubits
+  H = np.zeros((2**n,2**n))
+  H_ising = np.zeros((2**n,2**n))
+  H_tf = np.zeros((2**n,2**n))
+
+  #Generate and add Ising components to Hamiltonian
+  for i in range(0,n):
+      if i == 0 or i == n-1:
+          ising_comp = s_z
+      else:
+          ising_comp = I
+      for j in range(0,n-1):
+          if j == i or j == i-1:
+              ising_comp = np.kron(ising_comp, s_z)
+          else:
+              ising_comp = np.kron(ising_comp, I)
+      H_ising += ising_comp
+
+  #Generate and add transverse components to Hamiltonian
+  for i in range(0,n):
+      if i == 0:
+          trans_comp = s_x
+      else:
+          trans_comp = I
+      for j in range(0,n-1):
+          if j == i-1:
+              trans_comp = np.kron(trans_comp, s_x)
+          else:
+              trans_comp = np.kron(trans_comp, I)
+      H_tf += trans_comp
+      
+  H = -(J*H_ising + B*H_tf)
+
+  return min(np.linalg.eigvals(H))
