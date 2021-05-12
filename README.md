@@ -1,4 +1,4 @@
-# Machine Learning Quantum Many-body Systems using Neural Autoregressive Distribution Estimation
+# Machine Learning Quantum Many-body Systems using Neural Autoregressive Distribution Estimation and GPU Acceleration
 
 ## Introduction 
 
