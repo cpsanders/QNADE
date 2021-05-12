@@ -38,8 +38,9 @@ def generate_possible_states(n):
 
 def calculate_epsilons(model, s, psi_omega, B, J):
         """
-        Calculates the E_loc(s) for all sampled states.
-        epsilon(s) = sum(s_i * s_i+1) + B/psi_s * sum(psi_s_prime)
+        Calculates the E_loc(s) for all sampled states according to the TFIM: 
+            epsilon(s) = sum(s_i * s_i+1) + B/psi_s * sum(psi_s_prime).
+        Method could be expanded to include more Hamiltonians.
 
         Args: 
             model: QNADE model 
@@ -81,45 +82,56 @@ def calculate_epsilons(model, s, psi_omega, B, J):
 
 def TFIM_exact(n, g):
 
-  J = 1
-  B = g
+    """
+    Exact ground state energy calculation according to TFIM. 
 
-  #Initialize operators and Identity matrix
-  s_z = np.array([[1,0],[0,-1]])
-  s_x = np.array([[0,1],[1,0]])
-  I = np.array([[1,0],[0,1]])
+    Args: 
+        n: number of qubits (int)
+        g: magnetic field coupling strenth (float)
+    
+    Returns: 
+        energy: ground state energy (float)
+    """
 
-  #Calculate and print energies for n qubits
-  H = np.zeros((2**n,2**n))
-  H_ising = np.zeros((2**n,2**n))
-  H_tf = np.zeros((2**n,2**n))
+    J = 1
+    B = g
 
-  #Generate and add Ising components to Hamiltonian
-  for i in range(0,n):
-      if i == 0 or i == n-1:
-          ising_comp = s_z
-      else:
-          ising_comp = I
-      for j in range(0,n-1):
-          if j == i or j == i-1:
-              ising_comp = np.kron(ising_comp, s_z)
-          else:
-              ising_comp = np.kron(ising_comp, I)
-      H_ising += ising_comp
+    #Initialize operators and Identity matrix
+    s_z = np.array([[1,0],[0,-1]])
+    s_x = np.array([[0,1],[1,0]])
+    I = np.array([[1,0],[0,1]])
 
-  #Generate and add transverse components to Hamiltonian
-  for i in range(0,n):
-      if i == 0:
-          trans_comp = s_x
-      else:
-          trans_comp = I
-      for j in range(0,n-1):
-          if j == i-1:
-              trans_comp = np.kron(trans_comp, s_x)
-          else:
-              trans_comp = np.kron(trans_comp, I)
-      H_tf += trans_comp
-      
-  H = -(J*H_ising + B*H_tf)
+    #Calculate and print energies for n qubits
+    H = np.zeros((2**n,2**n))
+    H_ising = np.zeros((2**n,2**n))
+    H_tf = np.zeros((2**n,2**n))
 
-  return min(np.linalg.eigvals(H))
+    #Generate and add Ising components to Hamiltonian
+    for i in range(0,n):
+        if i == 0 or i == n-1:
+            ising_comp = s_z
+        else:
+            ising_comp = I
+        for j in range(0,n-1):
+            if j == i or j == i-1:
+                ising_comp = np.kron(ising_comp, s_z)
+            else:
+                ising_comp = np.kron(ising_comp, I)
+        H_ising += ising_comp
+
+    #Generate and add transverse components to Hamiltonian
+    for i in range(0,n):
+        if i == 0:
+            trans_comp = s_x
+        else:
+            trans_comp = I
+        for j in range(0,n-1):
+            if j == i-1:
+                trans_comp = np.kron(trans_comp, s_x)
+            else:
+                trans_comp = np.kron(trans_comp, I)
+        H_tf += trans_comp
+        
+    H = -(J*H_ising + B*H_tf)
+
+    return min(np.linalg.eigvals(H))

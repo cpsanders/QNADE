@@ -3,8 +3,7 @@ Created on April 15 2021
 
 @author: Caleb Sanders
 
-Optimize a network to the ground state and solve for the ground state 
-energy of an arbitrary-sized quantum many-body system.   
+Optimize a QNADE network to the ground state, solve for the ground state energy.    
 """
 
 import matplotlib.pyplot as plt
@@ -18,8 +17,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 L = 5
 H = 2*L
 
-J = 1 #sigma_z activation
-B = 1 #sigma_x activation
+J = 1 #Ising activation
+B = 1 #magnetic field coupling strength
 
 # initialize network and model, put network on device 
 network = nn.Sequential(nn.Linear(L,H), nn.Tanh(), nn.Linear(H,2), nn.Tanh())
@@ -72,16 +71,18 @@ for iter in range(iters):
   #optimize network based on e_grad 
   optimizer.step() 
 
-final_energy = energies[len(energies)-1]
+final_energy = min(energies)
+print("QNADE Energy: {}".format(final_energy))
 
 # plot training data 
 plt.figure()
-plt.title("Num qubits={}; Energy={}; g={}".format(L,final_energy,B))
+plt.title("L={}; g={}; QNADE Energy={}".format(L,B,final_energy))
 plt.plot(energies)
 
 if L<12:
   expected_e = TFIM_exact(L,B)
   expected_e_plot = [expected_e for i in range(iters)]
+  print("Expected Energy: {}".format(expected_e))
   plt.plot(expected_e_plot, 'g--')
 
 plt.xlabel("Iterations")
