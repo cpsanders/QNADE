@@ -38,7 +38,7 @@ def generate_possible_states(n: int):
     return torch.tensor(possible_states, dtype=torch.float)
 
 
-def calculate_epsilons(model: nn.Module, s: torch.Tensor, psi_omega: np.ndarray, B: int, J: int):
+def calculate_epsilons(model: nn.Module, s: torch.Tensor, psi_omega: np.ndarray, B: float, J: float):
     """
     Calculates the E_loc(s) for all sampled states according to the TFIM:
         epsilon(s) = sum(s_i * s_i+1) + B/psi_s * sum(psi_s_prime).
